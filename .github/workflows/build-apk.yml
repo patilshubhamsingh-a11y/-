@@ -13,16 +13,11 @@ jobs:
       - name: Create Keystore
         run: |
           mkdir -p ~/.android
-          rm -f ~/.android/debug.keystore app/debug.keystore
           keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           cp ~/.android/debug.keystore app/debug.keystore
-      - name: Build
-        run: |
-          ls -la
-          find. -name "gradlew" -type f
-          chmod +x./gradlew || chmod +x gradlew || true
-          ./gradlew assembleDebug --no-daemon || gradle assembleDebug --no-daemon
-      - name: Upload
+      - name: Build APK
+        run: gradle assembleDebug --no-daemon
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Gajanan-Mandir-APK

@@ -1,0 +1,61 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Golden halo background -->
+    <path
+        android:pathData="M54,54m-28,0a28,28 0,1 1,56 0a28,28 0,1 1,-56 0"
+        android:fillColor="#33FFFFFF" />
+    <!-- Temple Shikhara & Kalash icon -->
+    <!-- Kalash atop -->
+    <path
+        android:pathData="M54,23 L56,27 L52,27 Z"
+        android:fillColor="#FFE082" />
+    <path
+        android:pathData="M54,28 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:fillColor="#FFD54F" />
+    <path
+        android:pathData="M51,32 L57,32 L55,30 L53,30 Z"
+        android:fillColor="#FFE082" />
+    <!-- Saffron Temple flag (Dhvaj) -->
+    <path
+        android:pathData="M55,24 L65,27 L55,30 Z"
+        android:fillColor="#FFB300" />
+    <!-- Temple Shikhara tiers -->
+    <path
+        android:pathData="M54,34 L45,46 L63,46 Z"
+        android:fillColor="#FFF8E1" />
+    <path
+        android:pathData="M54,34 L42,56 L66,56 Z"
+        android:fillColor="#FFECB3" />
+    <path
+        android:pathData="M54,34 L38,66 L70,66 Z"
+        android:fillColor="#FFE082" />
+    <!-- Temple Pillars and Sanctum Garbhagriha Arch -->
+    <path
+        android:pathData="M34,66 L74,66 L74,70 L34,70 Z"
+        android:fillColor="#FFF8E1" />
+    <path
+        android:pathData="M37,70 L43,70 L43,84 L37,84 Z"
+        android:fillColor="#FFECB3" />
+    <path
+        android:pathData="M65,70 L71,70 L71,84 L65,84 Z"
+        android:fillColor="#FFECB3" />
+    <!-- Central Sanctum Arch with Diya -->
+    <path
+        android:pathData="M46,84 L46,74 C46,70 62,70 62,74 L62,84 Z"
+        android:fillColor="#D84315" />
+    <!-- Glowing Diya Lamp inside Sanctum -->
+    <path
+        android:pathData="M50,81 C50,83 58,83 58,81 Z"
+        android:fillColor="#FFD54F" />
+    <path
+        android:pathData="M54,77 C55,79 55.5,80 54,81 C52.5,80 53,79 54,77 Z"
+        android:fillColor="#FFF9C4" />
+    <!-- Temple Base Platform -->
+    <path
+        android:pathData="M30,84 L78,84 L80,87 L28,87 Z"
+        android:fillColor="#FFE082" />
+</vector>

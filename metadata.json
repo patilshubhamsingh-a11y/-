@@ -1,0 +1,6 @@
+{
+  "name": "श्री संत गजानन महाराज मंदिर घिर्णी",
+  "description": "घिर्णी (बुलढाणा) येथील श्री संत गजानन महाराज मंदिराचे अधिकृत भक्ती अॅप. आजचे दर्शन, थेट दर्शन, भजने, आरती, पारायण आणि मंदिराचा इतिहास.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

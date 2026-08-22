@@ -18,8 +18,10 @@ jobs:
           cp ~/.android/debug.keystore app/debug.keystore
       - name: Build
         run: |
-          chmod +x gradlew
-           ./gradlew assembleDebug
+          ls -la
+          find. -name "gradlew" -type f
+          chmod +x./gradlew || chmod +x gradlew || true
+          ./gradlew assembleDebug --no-daemon || gradle assembleDebug --no-daemon
       - name: Upload
         uses: actions/upload-artifact@v4
         with:

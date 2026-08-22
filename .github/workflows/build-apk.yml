@@ -10,20 +10,16 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v3
-
       - name: Fix Keystore
         run: |
           rm -rf ~/.android
           mkdir -p ~/.android
-          rm -f app/debug.keystore debug.keystore
-          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          rm -f app/debug.keystore
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           cp ~/.android/debug.keystore app/debug.keystore
-          cp ~/.android/debug.keystore./debug.keystore
           ls -lh ~/.android/debug.keystore app/debug.keystore
-
       - name: Build
-        run: gradle assembleDebug --no-daemon
-
+        run: gradle assembleDebug
       - name: Upload
         uses: actions/upload-artifact@v4
         with:

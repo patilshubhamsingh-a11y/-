@@ -5,23 +5,82 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Fix all R imports automatically
+
+      - name: Fix build.gradle.kts completely
+        run: |
+          cat > app/build.gradle.kts <<'EOF'
+          plugins {
+              alias(libs.plugins.android.application)
+              alias(libs.plugins.kotlin.android)
+          }
+
+          android {
+              namespace = "com.example.gajananmandir"
+              compileSdk = 34
+              defaultConfig {
+                  applicationId = "com.example.gajananmandir"
+                  minSdk = 24
+                  targetSdk = 34
+                  versionCode = 1
+                  versionName = "1.0"
+              }
+              buildTypes {
+                  release {
+                      isMinifyEnabled = false
+                  }
+              }
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+              buildFeatures {
+                  compose = true
+              }
+              composeOptions {
+                  kotlinCompilerExtensionVersion = "1.5.8"
+              }
+          }
+
+          dependencies {
+              implementation(libs.androidx.core.ktx)
+              implementation(libs.androidx.appcompat)
+              implementation(libs.material)
+              implementation(libs.androidx.activity.compose)
+              implementation(platform(libs.androidx.compose.bom))
+              implementation(libs.androidx.compose.ui)
+              implementation("androidx.compose.foundation:foundation")
+              implementation(libs.androidx.compose.material3)
+              implementation("androidx.compose.material:material-icons-extended")
+          }
+          EOF
+          echo "build.gradle.kts fixed"
+
+      - name: Fix all R imports
         run: |
           find app/src -name "*.kt" -type f -exec sed -i 's/^import.*\.R.*/import com.example.gajananmandir.R/' {} \;
-          echo "Fixed R imports"
+          find app/src -name "*.kt" -type f -exec sed -i '1i import androidx.compose.foundation.shape.RoundedCornerShape' {} \; 2>/dev/null || true
+          echo "R imports fixed"
+
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
       - name: Setup Gradle 8.4
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.4
+
       - name: Build APK
         run: gradle assembleDebug --no-configuration-cache --no-daemon
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

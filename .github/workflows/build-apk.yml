@@ -10,7 +10,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Force Fix R
+      - name: Fix Build and R Imports Properly
         run: |
           cat > app/build.gradle.kts <<'GRADLE'
           plugins {
@@ -49,19 +49,46 @@ jobs:
               implementation("androidx.compose.foundation:foundation")
           }
           GRADLE
-          for f in $(find app/src/main/java -name "*.kt")
-          do
-            if! grep -q "gajananmandir.R" "$f"; then
-              sed -i '/^package /a import com.example.gajananmandir.R' "$f"
-              echo "Fixed R in $f"
-            fi
-          done
 
-      - run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+          python3 << 'PY'
+          import os
+          base = "app/src/main/java"
+          for root, _, files in os.walk(base):
+              for f in files:
+                  if not f.endswith(".kt"):
+                      continue
+                  path = os.path.join(root, f)
+                  with open(path, 'r', encoding='utf-8', errors='ignore') as file:
+                      content = file.read()
+                  if "com.example.gajananmandir.R" in content:
+                      continue
+                  if "R." not in content:
+                      continue
+                  # package ke baad import add karo
+                  if "package" in content:
+                      new_content = content.replace("package ", "package ", 1)
+                      # first line after package
+                      lines = new_content.split("\n")
+                      for i, line in enumerate(lines):
+                          if line.startswith("package"):
+                              lines.insert(i+1, "import com.example.gajananmandir.R")
+                              break
+                      new_content = "\n".join(lines)
+                      with open(path, 'w', encoding='utf-8') as out:
+                          out.write(new_content)
+                      print(f"Fixed R in {path}")
+          PY
+
+      - name: Setup Gradle
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
       - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.4
-      - run: gradle assembleDebug --no-daemon
+
+      - name: Build Debug APK
+        run: gradle assembleDebug --no-daemon
+
       - uses: actions/upload-artifact@v4
         with:
           name: debug-apk

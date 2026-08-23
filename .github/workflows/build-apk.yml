@@ -49,12 +49,10 @@ jobs:
               implementation("androidx.compose.foundation:foundation")
           }
           GRADLE
-          find app/src/main/java -name "*.kt" | while read f; do
-            if grep -q "R\." "$f"; then
-              if! grep -q "com.example.gajananmandir.R" "$f"; then
-                echo "Fixing $f"
-                sed -i '/^package/a import com.example.gajananmandir.R' "$f"
-              fi
+          for f in $(find app/src/main/java -name "*.kt"); do
+            if grep -q "R\." "$f" &&! grep -q "gajananmandir.R" "$f"; then
+              echo "Fixing $f"
+              sed -i '/^package/a import com.example.gajananmandir.R' "$f"
             fi
           done
 

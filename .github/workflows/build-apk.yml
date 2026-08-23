@@ -87,23 +87,14 @@ jobs:
               Scaffold(topBar = { TopAppBar(title = { Text("Temple Location") }) }) { padding ->
                   Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
                       Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-                          Column(modifier = Modifier.padding(16.dp)) {
-                              Text("Shri Gajanan Maharaj Mandir, Shegaon")
-                          }
+                          Column(modifier = Modifier.padding(16.dp)) { Text("Shri Gajanan Maharaj Mandir, Shegaon") }
                       }
                   }
               }
           }
           EOF
 
-          find app/src -name "*.kt" -type f -exec sed -i '/RoundedCornerShape/d' {} \;
-
-          for f in $(grep -r -l "RoundedCornerShape" app/src --include="*.kt"); do
-            if! grep -q "RoundedCornerShape" "$f" | grep "^import" ; then
-              sed -i '/^package /a import androidx.compose.foundation.shape.RoundedCornerShape' "$f"
-            fi
-          done
-
+          sed -i '/import.*RoundedCornerShape/d' app/src/main/java/com/example/ui/screens/TempleLocationScreen.kt
           sed -i '/^package /a import androidx.compose.foundation.shape.RoundedCornerShape' app/src/main/java/com/example/ui/screens/TempleLocationScreen.kt
 
           find app/src -name "*.kt" -type f -exec sed -i 's/^import.*\.R.*/import com.example.gajananmandir.R/' {} \;

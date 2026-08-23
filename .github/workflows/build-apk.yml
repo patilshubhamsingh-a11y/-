@@ -53,6 +53,7 @@ jobs:
           do
             if! grep -q "gajananmandir.R" "$f"; then
               sed -i '/^package /a import com.example.gajananmandir.R' "$f"
+              echo "Fixed R in $f"
             fi
           done
 

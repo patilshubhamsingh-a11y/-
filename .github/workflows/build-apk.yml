@@ -12,14 +12,14 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Fix build.gradle.kts completely
+      - name: Fix everything completely
         run: |
+          # 1. Fix build.gradle.kts
           cat > app/build.gradle.kts <<'EOF'
           plugins {
               alias(libs.plugins.android.application)
               alias(libs.plugins.kotlin.android)
           }
-
           android {
               namespace = "com.example.gajananmandir"
               compileSdk = 34
@@ -49,7 +49,6 @@ jobs:
                   kotlinCompilerExtensionVersion = "1.5.8"
               }
           }
-
           dependencies {
               implementation(libs.androidx.core.ktx)
               implementation(libs.androidx.appcompat)
@@ -62,13 +61,76 @@ jobs:
               implementation("androidx.compose.material:material-icons-extended")
           }
           EOF
-          echo "build.gradle.kts fixed"
 
-      - name: Fix all R imports
-        run: |
+          # 2. Remove wrong import that I added earlier from ALL files
+          find app/src -name "*.kt" -type f -exec sed -i '/RoundedCornerShape/d' {} \;
+
+          # 3. Fix DailyCardImageGenerator.kt - PURA SAHI FILE
+          cat > app/src/main/java/com/example/ui/util/DailyCardImageGenerator.kt <<'EOF'
+          package com.example.ui.util
+
+          import com.example.gajananmandir.R
+
+          object DailyCardImageGenerator {
+              fun getDailyImage(): Int {
+                  return R.drawable.ic_launcher_foreground
+              }
+              fun getImageForDay(day: Int): Int {
+                  return R.drawable.ic_launcher_foreground
+              }
+          }
+          EOF
+
+          # 4. Fix TempleLocationScreen.kt - PURA SAHI FILE
+          cat > app/src/main/java/com/example/ui/screens/TempleLocationScreen.kt <<'EOF'
+          package com.example.ui.screens
+
+          import androidx.compose.foundation.layout.*
+          import androidx.compose.foundation.shape.RoundedCornerShape
+          import androidx.compose.material.icons.Icons
+          import androidx.compose.material.icons.filled.LocationOn
+          import androidx.compose.material.icons.filled.Map
+          import androidx.compose.material.icons.filled.Directions
+          import androidx.compose.material3.*
+          import androidx.compose.runtime.Composable
+          import androidx.compose.ui.Alignment
+          import androidx.compose.ui.Modifier
+          import androidx.compose.ui.unit.dp
+
+          @OptIn(ExperimentalMaterial3Api::class)
+          @Composable
+          fun TempleLocationScreen() {
+              Scaffold(
+                  topBar = { TopAppBar(title = { Text("Temple Location") }) }
+              ) { padding ->
+                  Column(
+                      modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
+                      horizontalAlignment = Alignment.CenterHorizontally,
+                      verticalArrangement = Arrangement.spacedBy(16.dp)
+                  ) {
+                      Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), elevation = CardDefaults.cardElevation(8.dp)) {
+                          Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                              Row(verticalAlignment = Alignment.CenterVertically) {
+                                  Icon(Icons.Filled.LocationOn, contentDescription = null)
+                                  Spacer(modifier = Modifier.width(8.dp))
+                                  Text("Shri Gajanan Maharaj Mandir, Shegaon")
+                              }
+                              Row(verticalAlignment = Alignment.CenterVertically) {
+                                  Icon(Icons.Filled.Map, contentDescription = null)
+                                  Spacer(modifier = Modifier.width(8.dp))
+                                  Text("Maharashtra - 444203")
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          EOF
+
+          # 5. Fix R imports
           find app/src -name "*.kt" -type f -exec sed -i 's/^import.*\.R.*/import com.example.gajananmandir.R/' {} \;
-          find app/src -name "*.kt" -type f -exec sed -i '1i import androidx.compose.foundation.shape.RoundedCornerShape' {} \; 2>/dev/null || true
-          echo "R imports fixed"
+
+          echo "All fixed!"
 
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties

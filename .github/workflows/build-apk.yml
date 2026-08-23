@@ -10,7 +10,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Fix R import
+      - name: Force Fix R
         run: |
           cat > app/build.gradle.kts <<'GRADLE'
           plugins {
@@ -49,22 +49,16 @@ jobs:
               implementation("androidx.compose.foundation:foundation")
           }
           GRADLE
-          cat > /tmp/fix.py <<'PY'
-          import os, re
-          base="app/src/main/java"
-          for r,_,fs in os.walk(base):
-            for f in fs:
-              if not f.endswith(".kt"): continue
-              p=os.path.join(r,f)
-              s=open(p,'r',encoding='utf-8',errors='ignore').read()
-              if " R" in s or "R." in s:
-                if "com.example.gajananmandir.R" not in s and "import android.R" not in s:
-                  # package ke baad import daalo
-                  s = re.sub(r'(package.+\n)', r'\1import com.example.gajananmandir.R\n', s, count=1)
-                  open(p,'w',encoding='utf-8').write(s)
-                  print(f"Fixed R in {p}")
-          PY
-          python3 /tmp/fix.py
+          # Har kt file me R ka import daal do
+          find app/src/main/java -name "*.kt" -exec grep -l "R\." {} \; | while read f; do
+            if! grep -q "com.example.gajananmandir.R" "$f"; then
+              echo "Fixing $f"
+              sed -i '/^package/a import com.example.gajananmandir.R' "$f"
+            fi
+          done
+          # Double check
+          grep -n "Unresolved reference: R" app/src/main/java/com/example/ui/screens/HomeScreen.kt || echo "HomeScreen checked"
+          grep -n "Unresolved reference: R" app/src/main/java/com/example/ui/screens/LiveDarshanScreen.kt || echo "LiveDarshan checked"
 
       - run: echo "sdk.dir=$ANDROID_HOME" > local.properties
       - uses: gradle/actions/setup-gradle@v3

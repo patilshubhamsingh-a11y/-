@@ -1,31 +1,27 @@
 [versions]
 agp = "8.2.2"
 kotlin = "1.9.22"
-ksp = "1.9.22-1.0.17"
-core-ktx = "1.12.0"
+coreKtx = "1.12.0"
 appcompat = "1.6.1"
 material = "1.11.0"
 activityCompose = "1.8.2"
-composeBom = "2024.02.00"
-lifecycle = "2.7.0"
-googleServices = "4.4.2"
+composeBom = "2023.10.01"
+ksp = "1.9.22-1.0.17"
+googleServices = "4.4.1"
 secrets = "2.0.1"
-roborazzi = "1.14.0"
 
 [libraries]
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
-androidx-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secrets" }
-google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }

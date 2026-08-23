@@ -49,9 +49,11 @@ jobs:
               implementation("androidx.compose.foundation:foundation")
           }
           GRADLE
-          for f in $(find app/src/main/java -name "*.kt"); do
+          for f in $(find app/src/main/java -name "*.kt")
+          do
             if! grep -q "gajananmandir.R" "$f"; then
               sed -i '/^package /a import com.example.gajananmandir.R' "$f"
+              echo "Fixed $f"
             fi
           done
 

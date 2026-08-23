@@ -1,99 +1,44 @@
-name: build
-on: [push]
-jobs:
-  build:
-      runs-on: ubuntu-latest
-          steps:
-                - uses: actions/checkout@v4
-                      - uses: actions/setup-java@v4
-                              with:
-                                        java-version: '17'
-                                                  distribution: 'temurin'
+plugins {
+          alias(libs.plugins.android.application)
+              alias(libs.plugins.kotlin.android)
+}
 
-                                                        - name: Fix all brackets and imports
-                                                                run: |
-                                                                          cat > app/build.gradle.kts <<'EOF'
-                                                                                    plugins {
-                                                                                                      alias(libs.plugins.android.application)
-                                                                                                                    alias(libs.plugins.kotlin.android)
-                                                                                    }
-                                                                                              android {
-                                                                                                              namespace = "com.example.gajananmandir"
-                                                                                                                            compileSdk = 34
-                                                                                                                                          defaultConfig {
-                                                                                                                                                              applicationId = "com.example.gajananmandir"
-                                                                                                                                                                                minSdk = 24
-                                                                                                                                                                                                  targetSdk = 34
-                                                                                                                                                                                                                    versionCode = 1
-                                                                                                                                                                                                                                      versionName = "1.0"
-                                                                                                                                          }
-                                                                                                                                                        buildTypes {
-                                                                                                                                                                              release {
-                                                                                                                                                                                                      isMinifyEnabled = false
-                                                                                                                                                                              }
-                                                                                                                                                        }
-                                                                                                                                                                      compileOptions {
-                                                                                                                                                                                          sourceCompatibility = JavaVersion.VERSION_17
-                                                                                                                                                                                                            targetCompatibility = JavaVersion.VERSION_17
-                                                                                                                                                                      }
-                                                                                                                                                                                    kotlinOptions {
-                                                                                                                                                                                                          jvmTarget = "17"
-                                                                                                                                                                                    }
-                                                                                                                                                                                                  buildFeatures {
-                                                                                                                                                                                                                      compose = true
-                                                                                                                                                                                                  }
-                                                                                                                                                                                                                composeOptions {
-                                                                                                                                                                                                                                      kotlinCompilerExtensionVersion = "1.5.8"
-                                                                                                                                                                                                                }
-                                                                                              }
-                                                                                                        dependencies {
-                                                                                                                          implementation(libs.androidx.core.ktx)
-                                                                                                                                        implementation(libs.androidx.appcompat)
-                                                                                                                                                      implementation(libs.material)
-                                                                                                                                                                    implementation(libs.androidx.activity.compose)
-                                                                                                                                                                                  implementation(platform(libs.androidx.compose.bom))
-                                                                                                                                                                                                implementation(libs.androidx.compose.ui)
-                                                                                                                                                                                                              implementation("androidx.compose.foundation:foundation:1.6.4")
-                                                                                                                                                                                                                            implementation(libs.androidx.compose.material3)
-                                                                                                                                                                                                                                          implementation("androidx.compose.material:material-icons-extended")
-                                                                                                        }
-                                                                                                                  EOF
+android {
+          namespace = "com.example.gajananmandir"
+              compileSdk = 34
+                  defaultConfig {
+                                applicationId = "com.example.gajananmandir"
+                                        minSdk = 24
+                                                targetSdk = 34
+                                                        versionCode = 1
+                                                                versionName = "1.0"
+                  }
+                      buildTypes {
+                                release { isMinifyEnabled = false }
+                      }
+                          compileOptions {
+                                      sourceCompatibility = JavaVersion.VERSION_17
+                                              targetCompatibility = JavaVersion.VERSION_17
+                          }
+                              kotlinOptions { jvmTarget = "17" }
+                                  buildFeatures { compose = true }
+                                      composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
+}
 
-                                                                                                                            python3 << 'PY'
-                                                                                                                                      import os
-                                                                                                                                                for root, dirs, files in os.walk("app/src"):
-                                                                                                                                                              for file in files:
-                                                                                                                                                                                if file.endswith(".kt"):
-                                                                                                                                                                                                      path = os.path.join(root, file)
-                                                                                                                                                                                                                            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-                                                                                                                                                                                                                                                      content = f.read()
-                                                                                                                                                                                                                                                                            if "RoundedCornerShape" in content and "import androidx.compose.foundation.shape.RoundedCornerShape" not in content:
-                                                                                                                                                                                                                                                                                                      lines = content.split("\n")
-                                                                                                                                                                                                                                                                                                                                for i, line in enumerate(lines):
-                                                                                                                                                                                                                                                                                                                                                              if line.startswith("package "):
-                                                                                                                                                                                                                                                                                                                                                                                                lines.insert(i+1, "import androidx.compose.foundation.shape.RoundedCornerShape")
-                                                                                                                                                                                                                                                                                                                                                                                                                                  break
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            with open(path, 'w', encoding='utf-8') as out:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          out.write("\n".join(lines))
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    print(f"Fixed {path}")
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              PY
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    - run: echo "sdk.dir=$ANDROID_HOME" > local.properties
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          - uses: gradle/actions/setup-gradle@v3
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  with:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            gradle-version: 8.4
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  - run: gradle assembleDebug --no-daemon
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        - uses: actions/upload-artifact@v4
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                with:
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          name: debug-apk
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    path: app/build/outputs/apk/debug/*.apk
-                                                                                                        }
-                                                                                                                                                                                                                }
-                                                                                                                                                                                                  }
-                                                                                                                                                                                    }
-                                                                                                                                                                      }
-                                                                                                                                                                              }
-                                                                                                                                                        }
-                                                                                                                                          }
-                                                                                              }
-                                                                                    }
+dependencies {
+          implementation(libs.androidx.core.ktx)
+              implementation(libs.androidx.appcompat)
+                  implementation(libs.material)
+                      implementation(libs.androidx.activity.compose)
+                          implementation(platform(libs.androidx.compose.bom))
+                              implementation(libs.androidx.compose.ui)
+                                  implementation(libs.androidx.compose.foundation)
+                                      implementation(libs.androidx.compose.material3)
+                                          implementation("androidx.compose.material:material-icons-extended")
+}
+}
+                          }
+                      }
+                  }
+}
+}

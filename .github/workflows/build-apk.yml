@@ -10,6 +10,10 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Fix all R imports automatically
+        run: |
+          find app/src -name "*.kt" -type f -exec sed -i 's/^import.*\.R.*/import com.example.gajananmandir.R/' {} \;
+          echo "Fixed R imports"
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties
       - name: Setup Gradle 8.4

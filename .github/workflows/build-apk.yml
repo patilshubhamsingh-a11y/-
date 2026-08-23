@@ -49,10 +49,11 @@ jobs:
               implementation("androidx.compose.foundation:foundation")
           }
           GRADLE
+          # Sabhi kt files me R import daal do - bina check ke
           for f in $(find app/src/main/java -name "*.kt"); do
-            if grep -q "R\." "$f" &&! grep -q "gajananmandir.R" "$f"; then
-              echo "Fixing $f"
-              sed -i '/^package/a import com.example.gajananmandir.R' "$f"
+            if! grep -q "com.example.gajananmandir.R" "$f"; then
+              sed -i '/^package /a import com.example.gajananmandir.R' "$f"
+              echo "Fixed R in $f"
             fi
           done
 

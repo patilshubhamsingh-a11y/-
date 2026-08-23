@@ -14,7 +14,6 @@ jobs:
 
       - name: Fix everything finally
         run: |
-          # 1. Fix build.gradle.kts
           cat > app/build.gradle.kts <<'EOF'
           plugins {
               alias(libs.plugins.android.application)
@@ -62,7 +61,6 @@ jobs:
           }
           EOF
 
-          # 2. Fix DailyCardImageGenerator.kt
           cat > app/src/main/java/com/example/ui/util/DailyCardImageGenerator.kt <<'EOF'
           package com.example.ui.util
           import com.example.gajananmandir.R
@@ -72,7 +70,6 @@ jobs:
           }
           EOF
 
-          # 3. Fix TempleLocationScreen.kt
           cat > app/src/main/java/com/example/ui/screens/TempleLocationScreen.kt <<'EOF'
           package com.example.ui.screens
           import androidx.compose.foundation.layout.*
@@ -80,17 +77,15 @@ jobs:
           import androidx.compose.material.icons.Icons
           import androidx.compose.material.icons.filled.LocationOn
           import androidx.compose.material.icons.filled.Map
-          import androidx.compose.material.icons.filled.Directions
           import androidx.compose.material3.*
           import androidx.compose.runtime.Composable
-          import androidx.compose.ui.Alignment
           import androidx.compose.ui.Modifier
           import androidx.compose.ui.unit.dp
           @OptIn(ExperimentalMaterial3Api::class)
           @Composable
           fun TempleLocationScreen() {
               Scaffold(topBar = { TopAppBar(title = { Text("Temple Location") }) }) { padding ->
-                  Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                  Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
                       Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
                           Column(modifier = Modifier.padding(16.dp)) {
                               Text("Shri Gajanan Maharaj Mandir, Shegaon")
@@ -101,17 +96,17 @@ jobs:
           }
           EOF
 
-          # 4. Fix ALL files that use RoundedCornerShape - sahi jagah pe import add karo
+          find app/src -name "*.kt" -type f -exec sed -i '/RoundedCornerShape/d' {} \;
+
           for f in $(grep -r -l "RoundedCornerShape" app/src --include="*.kt"); do
-            if! grep -q "RoundedCornerShape" <(grep "^import" "$f"); then
+            if! grep -q "RoundedCornerShape" "$f" | grep "^import" ; then
               sed -i '/^package /a import androidx.compose.foundation.shape.RoundedCornerShape' "$f"
             fi
           done
 
-          # 5. Fix R imports
-          find app/src -name "*.kt" -type f -exec sed -i 's/^import.*\.R.*/import com.example.gajananmandir.R/' {} \;
+          sed -i '/^package /a import androidx.compose.foundation.shape.RoundedCornerShape' app/src/main/java/com/example/ui/screens/TempleLocationScreen.kt
 
-          echo "Fixed all!"
+          find app/src -name "*.kt" -type f -exec sed -i 's/^import.*\.R.*/import com.example.gajananmandir.R/' {} \;
 
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties

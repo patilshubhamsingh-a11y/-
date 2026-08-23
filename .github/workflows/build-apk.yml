@@ -10,7 +10,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Fix Build and R Imports Properly
+      - name: Fix R Properly With Python
         run: |
           cat > app/build.gradle.kts <<'GRADLE'
           plugins {
@@ -51,44 +51,32 @@ jobs:
           GRADLE
 
           python3 << 'PY'
-          import os
+          import os, re
           base = "app/src/main/java"
           for root, _, files in os.walk(base):
               for f in files:
-                  if not f.endswith(".kt"):
-                      continue
+                  if not f.endswith(".kt"): continue
                   path = os.path.join(root, f)
                   with open(path, 'r', encoding='utf-8', errors='ignore') as file:
-                      content = file.read()
-                  if "com.example.gajananmandir.R" in content:
-                      continue
-                  if "R." not in content:
-                      continue
-                  # package ke baad import add karo
-                  if "package" in content:
-                      new_content = content.replace("package ", "package ", 1)
-                      # first line after package
-                      lines = new_content.split("\n")
-                      for i, line in enumerate(lines):
-                          if line.startswith("package"):
-                              lines.insert(i+1, "import com.example.gajananmandir.R")
-                              break
-                      new_content = "\n".join(lines)
+                      text = file.read()
+                  original = text
+                  # 1. Saare purane galat imports hatao
+                  text = text.replace("import com.example.gajananmandir.R\n", "")
+                  text = text.replace("import com.example.gajananmandir.R", "")
+                  # 2. R. ko full path se replace karo - ye 100% kaam karta hai
+                  text = re.sub(r'\bR\.', 'com.example.gajananmandir.R.', text)
+                  if text!= original:
                       with open(path, 'w', encoding='utf-8') as out:
-                          out.write(new_content)
-                      print(f"Fixed R in {path}")
+                          out.write(text)
+                      print(f"Fixed: {path}")
+          print("All R fixes done")
           PY
 
-      - name: Setup Gradle
-        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
-
+      - run: echo "sdk.dir=$ANDROID_HOME" > local.properties
       - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.4
-
-      - name: Build Debug APK
-        run: gradle assembleDebug --no-daemon
-
+      - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: debug-apk

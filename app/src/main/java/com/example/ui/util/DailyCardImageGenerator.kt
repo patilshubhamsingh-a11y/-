@@ -1,5 +1,5 @@
 package com.example.ui.util
-
+import com.example.gajananmandir.R
 import android.content.Context
 import android.content.Intent
 import android.graphics.*

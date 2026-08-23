@@ -5,14 +5,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Fix everything finally
+      - name: Global fix RoundedCornerShape forever
         run: |
           cat > app/build.gradle.kts <<'EOF'
           plugins {
@@ -29,24 +27,14 @@ jobs:
                   versionCode = 1
                   versionName = "1.0"
               }
-              buildTypes {
-                  release {
-                      isMinifyEnabled = false
-                  }
-              }
+              buildTypes { release { isMinifyEnabled = false } }
               compileOptions {
                   sourceCompatibility = JavaVersion.VERSION_17
                   targetCompatibility = JavaVersion.VERSION_17
               }
-              kotlinOptions {
-                  jvmTarget = "17"
-              }
-              buildFeatures {
-                  compose = true
-              }
-              composeOptions {
-                  kotlinCompilerExtensionVersion = "1.5.8"
-              }
+              kotlinOptions { jvmTarget = "17" }
+              buildFeatures { compose = true }
+              composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
           }
           dependencies {
               implementation(libs.androidx.core.ktx)
@@ -55,63 +43,37 @@ jobs:
               implementation(libs.androidx.activity.compose)
               implementation(platform(libs.androidx.compose.bom))
               implementation(libs.androidx.compose.ui)
-              implementation("androidx.compose.foundation:foundation")
               implementation(libs.androidx.compose.material3)
               implementation("androidx.compose.material:material-icons-extended")
           }
           EOF
 
-          cat > app/src/main/java/com/example/ui/util/DailyCardImageGenerator.kt <<'EOF'
-          package com.example.ui.util
-          import com.example.gajananmandir.R
-          object DailyCardImageGenerator {
-              fun getDailyImage(): Int { return R.drawable.ic_launcher_foreground }
-              fun getImageForDay(day: Int): Int { return R.drawable.ic_launcher_foreground }
-          }
-          EOF
+          python3 << 'PY'
+          import os, re
+          for root, dirs, files in os.walk("app/src"):
+              for f in files:
+                  if f.endswith(".kt"):
+                      path = os.path.join(root, f)
+                      with open(path, 'r', encoding='utf-8', errors='ignore') as file:
+                          text = file.read()
+                      if "RoundedCornerShape" in text:
+                          # 1. import hatao
+                          text = re.sub(r'import.*RoundedCornerShape.*\n', '', text)
+                          # 2. RoundedCornerShape(16.dp) -> MaterialTheme.shapes.medium
+                          text = re.sub(r'RoundedCornerShape\s*\([^)]*\)', 'MaterialTheme.shapes.medium', text)
+                          # 3. agar bina bracket ke bacha ho
+                          text = text.replace('RoundedCornerShape', 'MaterialTheme.shapes.medium')
+                          with open(path, 'w', encoding='utf-8') as out:
+                              out.write(text)
+                          print(f"Fixed {path}")
+          PY
 
-          cat > app/src/main/java/com/example/ui/screens/TempleLocationScreen.kt <<'EOF'
-          package com.example.ui.screens
-          import androidx.compose.foundation.layout.*
-          import androidx.compose.foundation.shape.RoundedCornerShape
-          import androidx.compose.material.icons.Icons
-          import androidx.compose.material.icons.filled.LocationOn
-          import androidx.compose.material.icons.filled.Map
-          import androidx.compose.material3.*
-          import androidx.compose.runtime.Composable
-          import androidx.compose.ui.Modifier
-          import androidx.compose.ui.unit.dp
-          @OptIn(ExperimentalMaterial3Api::class)
-          @Composable
-          fun TempleLocationScreen() {
-              Scaffold(topBar = { TopAppBar(title = { Text("Temple Location") }) }) { padding ->
-                  Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-                      Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-                          Column(modifier = Modifier.padding(16.dp)) { Text("Shri Gajanan Maharaj Mandir, Shegaon") }
-                      }
-                  }
-              }
-          }
-          EOF
-
-          sed -i '/import.*RoundedCornerShape/d' app/src/main/java/com/example/ui/screens/TempleLocationScreen.kt
-          sed -i '/^package /a import androidx.compose.foundation.shape.RoundedCornerShape' app/src/main/java/com/example/ui/screens/TempleLocationScreen.kt
-
-          find app/src -name "*.kt" -type f -exec sed -i 's/^import.*\.R.*/import com.example.gajananmandir.R/' {} \;
-
-      - name: Create local.properties
-        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
-
-      - name: Setup Gradle 8.4
-        uses: gradle/actions/setup-gradle@v3
+      - run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+      - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.4
-
-      - name: Build APK
-        run: gradle assembleDebug --no-configuration-cache --no-daemon
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - run: gradle assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
         with:
           name: debug-apk
           path: app/build/outputs/apk/debug/*.apk

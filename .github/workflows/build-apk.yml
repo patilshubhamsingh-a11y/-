@@ -10,7 +10,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Fix Build File
+      - name: Fix R import
         run: |
           cat > app/build.gradle.kts <<'GRADLE'
           plugins {
@@ -49,28 +49,20 @@ jobs:
               implementation("androidx.compose.foundation:foundation")
           }
           GRADLE
-
-      - name: Auto Fix Imports
-        run: |
           cat > /tmp/fix.py <<'PY'
-          import os
+          import os, re
           base="app/src/main/java"
           for r,_,fs in os.walk(base):
             for f in fs:
               if not f.endswith(".kt"): continue
               p=os.path.join(r,f)
               s=open(p,'r',encoding='utf-8',errors='ignore').read()
-              o=s
-              if "RoundedCornerShape" in s and "foundation.shape" not in s:
-                s=s.replace("import androidx.compose.material3", "import androidx.compose.foundation.shape.RoundedCornerShape\nimport androidx.compose.material3")
-              if "AsyncImage" in s and "coil.compose" not in s:
-                s="import coil.compose.AsyncImage\n"+s
-              if "Icons.Filled" in s and "material.icons.Icons" not in s:
-                s="import androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.filled.*\n"+s
-              if "DailyCardImageGenerator" in p:
-                s="package com.example.ui.util\nobject DailyCardImageGenerator { fun getDailyImage(): Int = android.R.drawable.sym_def_app_icon \n fun getImageForDay(d:Int): Int = android.R.drawable.sym_def_app_icon }"
-              if s!=o:
-                open(p,'w',encoding='utf-8').write(s)
+              if " R" in s or "R." in s:
+                if "com.example.gajananmandir.R" not in s and "import android.R" not in s:
+                  # package ke baad import daalo
+                  s = re.sub(r'(package.+\n)', r'\1import com.example.gajananmandir.R\n', s, count=1)
+                  open(p,'w',encoding='utf-8').write(s)
+                  print(f"Fixed R in {p}")
           PY
           python3 /tmp/fix.py
 
@@ -79,7 +71,6 @@ jobs:
         with:
           gradle-version: 8.4
       - run: gradle assembleDebug --no-daemon
-
       - uses: actions/upload-artifact@v4
         with:
           name: debug-apk

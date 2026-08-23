@@ -10,7 +10,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Final Auto Fix - All Screens
+      - name: Final Fix - Basename Corrected
         run: |
           cat > app/build.gradle.kts <<'ENDGRADLE'
           plugins {
@@ -49,9 +49,9 @@ jobs:
           }
           ENDGRADLE
 
-          # Har screen ko automatic minimal bana do - chahe kaunsi bhi ho
           for FILE in app/src/main/java/com/example/ui/screens/*.kt; do
-            NAME=$(basename "$FILE".kt)
+            BASENAME=$(basename "$FILE")
+            NAME=${BASENAME%.kt}
             cat > "$FILE" <<EOF
           package com.example.ui.screens
           import androidx.compose.foundation.layout.*
@@ -64,7 +64,7 @@ jobs:
           fun $NAME() {
               Scaffold(topBar = { TopAppBar(title = { Text("$NAME") }) }) { p ->
                   Column(Modifier.fillMaxSize().padding(p).padding(16.dp)) {
-                      Text("Jai Gajanan - $NAME is working")
+                      Text("Jai Gajanan - $NAME working")
                   }
               }
           }

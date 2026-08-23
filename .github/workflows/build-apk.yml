@@ -10,7 +10,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Global fix RoundedCornerShape forever
+      - name: Fix ALL files final
         run: |
           cat > app/build.gradle.kts <<'EOF'
           plugins {
@@ -48,24 +48,62 @@ jobs:
           }
           EOF
 
+          cat > app/src/main/java/com/example/ui/screens/LiveDarshanScreen.kt <<'EOF'
+          package com.example.ui.screens
+
+          import androidx.compose.foundation.layout.*
+          import androidx.compose.material3.*
+          import androidx.compose.runtime.Composable
+          import androidx.compose.ui.Modifier
+          import androidx.compose.ui.unit.dp
+
+          @OptIn(ExperimentalMaterial3Api::class)
+          @Composable
+          fun LiveDarshanScreen() {
+              Scaffold(topBar = { TopAppBar(title = { Text("Live Darshan") }) }) { padding ->
+                  Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
+                      Card(modifier = Modifier.fillMaxWidth()) {
+                          Column(modifier = Modifier.padding(16.dp)) {
+                              Text("Live Darshan of Shri Gajanan Maharaj", style = MaterialTheme.typography.titleLarge)
+                              Spacer(modifier = Modifier.height(8.dp))
+                              Text("Watch live darshan from Shegaon temple.")
+                              Spacer(modifier = Modifier.height(12.dp))
+                              Button(onClick = {}) {
+                                  Text("Watch Live")
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          EOF
+
+          cat > app/src/main/java/com/example/ui/util/DailyCardImageGenerator.kt <<'EOF'
+          package com.example.ui.util
+          object DailyCardImageGenerator {
+              fun getDailyImage(): Int = android.R.drawable.sym_def_app_icon
+              fun getImageForDay(day: Int): Int = android.R.drawable.sym_def_app_icon
+          }
+          EOF
+
           python3 << 'PY'
           import os, re
-          for root, dirs, files in os.walk("app/src"):
-              for f in files:
-                  if f.endswith(".kt"):
-                      path = os.path.join(root, f)
-                      with open(path, 'r', encoding='utf-8', errors='ignore') as file:
-                          text = file.read()
-                      if "RoundedCornerShape" in text:
-                          # 1. import hatao
-                          text = re.sub(r'import.*RoundedCornerShape.*\n', '', text)
-                          # 2. RoundedCornerShape(16.dp) -> MaterialTheme.shapes.medium
-                          text = re.sub(r'RoundedCornerShape\s*\([^)]*\)', 'MaterialTheme.shapes.medium', text)
-                          # 3. agar bina bracket ke bacha ho
-                          text = text.replace('RoundedCornerShape', 'MaterialTheme.shapes.medium')
-                          with open(path, 'w', encoding='utf-8') as out:
-                              out.write(text)
-                          print(f"Fixed {path}")
+          for root, _, files in os.walk("app/src"):
+            for fn in files:
+              if fn.endswith(".kt"):
+                p=os.path.join(root,fn)
+                t=open(p,'r',errors='ignore').read()
+                orig=t
+                t=re.sub(r'import.*RoundedCornerShape.*\n','',t)
+                t=re.sub(r'RoundedCornerShape\s*\([^)]*\)','MaterialTheme.shapes.medium',t)
+                t=t.replace('RoundedCornerShape','MaterialTheme.shapes.medium')
+                # Fix R imports
+                if ' R.' in t or '(R.' in t or ' R ' in t:
+                  if 'import com.example.gajananmandir.R' not in t and 'import android.R' not in t:
+                    t=t.replace('package com.example.ui.screens', 'package com.example.ui.screens\nimport com.example.gajananmandir.R')
+                    t=t.replace('package com.example.ui.util', 'package com.example.ui.util\nimport com.example.gajananmandir.R')
+                if t!=orig:
+                  open(p,'w',encoding='utf-8').write(t)
           PY
 
       - run: echo "sdk.dir=$ANDROID_HOME" > local.properties

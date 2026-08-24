@@ -10,7 +10,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Fix Build File
+      - name: Fix Build
         run: |
           cat > app/build.gradle.kts <<'GRADLE'
           plugins { alias(libs.plugins.android.application); alias(libs.plugins.kotlin.android) }
@@ -31,31 +31,39 @@ jobs:
               implementation(platform(libs.androidx.compose.bom))
               implementation(libs.androidx.compose.ui)
               implementation(libs.androidx.compose.material3)
-              // Direct dependencies - libs me nahi hai isliye direct likha hai
-              implementation("androidx.compose.foundation:foundation")
-              implementation("androidx.compose.material:material-icons-extended")
+              implementation("androidx.compose.foundation:foundation:1.6.8")
+              implementation("androidx.compose.material:material-icons-extended:1.6.8")
               implementation("io.coil-kt:coil-compose:2.5.0")
           }
           GRADLE
 
           python3 << 'PY'
           import os, re
-          base = "app/src/main/java"
+          base="app/src/main/java"
           for root,_,files in os.walk(base):
-              for f in files:
-                  if not f.endswith(".kt"): continue
-                  path=os.path.join(root,f)
-                  with open(path,'r',encoding='utf-8',errors='ignore') as file:
-                      txt=file.read()
-                  orig=txt
-                  txt=re.sub(r'^import.*\.R.*\n?', '', txt, flags=re.MULTILINE)
-                  txt=re.sub(r'com\.example\.gajananmandir\.R\.drawable\.\w+', 'android.R.drawable.ic_menu_gallery', txt)
-                  txt=re.sub(r'(?<!android\.)\bR\.drawable\.\w+', 'android.R.drawable.ic_menu_gallery', txt)
-                  txt=re.sub(r'(?<!android\.)\bR\.string\.\w+', '"Gajanan Mandir"', txt)
-                  txt=re.sub(r'(?<!android\.)\bR\.\w+\.\w+', '0', txt)
-                  if txt!=orig:
-                      open(path,'w',encoding='utf-8').write(txt)
-                      print(f"Fixed {path}")
+            for f in files:
+              if not f.endswith(".kt"): continue
+              path=os.path.join(root,f)
+              with open(path,'r',encoding='utf-8',errors='ignore') as file:
+                txt=file.read()
+              orig=txt
+
+              # R fix
+              txt=re.sub(r'^import.*\.R.*\n?', '', txt, flags=re.MULTILINE)
+              txt=re.sub(r'com\.example\.gajananmandir\.R\.drawable\.\w+', 'android.R.drawable.ic_menu_gallery', txt)
+              txt=re.sub(r'(?<!android\.)\bR\.drawable\.\w+', 'android.R.drawable.ic_menu_gallery', txt)
+              txt=re.sub(r'(?<!android\.)\bR\.string\.\w+', '"Gajanan Mandir"', txt)
+              txt=re.sub(r'(?<!android\.)\bR\.\w+\.\w+', '0', txt)
+
+              # Ye 2 line asli fix hai - bina import ke full path
+              txt = re.sub(r'\bRoundedCornerShape\b', 'androidx.compose.foundation.shape.RoundedCornerShape', txt)
+              txt = re.sub(r'(?<!\.)\bChevronRight\b', 'androidx.compose.material.icons.Icons.Filled.ChevronRight', txt)
+              txt = re.sub(r'\bIcons\.Filled\.ChevronRight\b', 'androidx.compose.material.icons.Icons.Filled.ChevronRight', txt)
+
+              if txt!=orig:
+                open(path,'w',encoding='utf-8').write(txt)
+                print(f"Fixed {path}")
+          print("All Fixed")
           PY
 
       - run: echo "sdk.dir=$ANDROID_HOME" > local.properties

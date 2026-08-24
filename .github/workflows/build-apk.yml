@@ -10,7 +10,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Clean ALL R References
+      - name: Fix All Imports and Libraries
         run: |
           cat > app/build.gradle.kts <<'GRADLE'
           plugins { alias(libs.plugins.android.application); alias(libs.plugins.kotlin.android) }
@@ -24,9 +24,17 @@ jobs:
               composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
           }
           dependencies {
-              implementation(libs.androidx.core.ktx); implementation(libs.androidx.appcompat); implementation(libs.material)
-              implementation(libs.androidx.activity.compose); implementation(platform(libs.androidx.compose.bom))
-              implementation(libs.androidx.compose.ui); implementation(libs.androidx.compose.material3)
+              implementation(libs.androidx.core.ktx)
+              implementation(libs.androidx.appcompat)
+              implementation(libs.material)
+              implementation(libs.androidx.activity.compose)
+              implementation(platform(libs.androidx.compose.bom))
+              implementation(libs.androidx.compose.ui)
+              implementation(libs.androidx.compose.material3)
+              implementation(libs.androidx.compose.foundation)
+              implementation("androidx.compose.material:material-icons-extended")
+              implementation("androidx.compose.foundation:foundation")
+              implementation("io.coil-kt:coil-compose:2.5.0")
           }
           GRADLE
 
@@ -40,29 +48,37 @@ jobs:
                   with open(path,'r',encoding='utf-8',errors='ignore') as file:
                       txt=file.read()
                   orig=txt
-                  # 1. R ke imports hatao
+
+                  # R imports hatao aur safe banao
                   txt = re.sub(r'^import.*\.R.*\n?', '', txt, flags=re.MULTILINE)
-                  # 2. com.example.gajananmandir.R.drawable.xxx -> android.R.drawable.ic_menu_gallery
                   txt = re.sub(r'com\.example\.gajananmandir\.R\.drawable\.\w+', 'android.R.drawable.ic_menu_gallery', txt)
-                  # 3. Sirf R.drawable (android. wala nahi) -> android.R.drawable
                   txt = re.sub(r'(?<!android\.)\bR\.drawable\.\w+', 'android.R.drawable.ic_menu_gallery', txt)
                   txt = re.sub(r'(?<!android\.)\bR\.string\.\w+', '"Gajanan Mandir"', txt)
-                  txt = re.sub(r'(?<!android\.)\bR\.mipmap\.\w+', 'android.R.drawable.sym_def_app_icon', txt)
                   txt = re.sub(r'(?<!android\.)\bR\.\w+\.\w+', '0', txt)
+
+                  # Missing imports add karo
+                  if 'RoundedCornerShape' in txt and 'RoundedCornerShape' not in txt.split('import')[0]:
+                      if 'import androidx.compose.foundation.shape.RoundedCornerShape' not in txt:
+                          txt = txt.replace('package ', 'package ', 1)
+                          txt = txt.replace('\n', '\nimport androidx.compose.foundation.shape.RoundedCornerShape\n', 1)
+
+                  if 'ChevronRight' in txt and 'ChevronRight' not in txt:
+                      pass
+                  if 'ChevronRight' in txt and 'import androidx.compose.material.icons.filled.ChevronRight' not in txt:
+                      txt = txt.replace('import androidx.compose.material.icons.Icons', 'import androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.filled.ChevronRight', 1) if 'import androidx.compose.material.icons.Icons' in txt else txt.replace('package ', 'package \nimport androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.filled.ChevronRight\n', 1)
 
                   if txt!=orig:
                       with open(path,'w',encoding='utf-8') as out:
                           out.write(txt)
-                      print(f"Cleaned {path}")
-          print("All files cleaned safely")
+                      print(f"Fixed {path}")
+          print("Done")
           PY
 
       - run: echo "sdk.dir=$ANDROID_HOME" > local.properties
       - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.4
-      - name: Build APK
-        run: gradle assembleDebug --no-daemon
+      - run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: gajanan-mandir-apk

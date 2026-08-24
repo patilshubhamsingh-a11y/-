@@ -1,74 +1,38 @@
 name: build
-on: [push]
+
+on:
+  push:
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Nuke All Broken Screens
-        run: |
-          cat > app/build.gradle.kts <<'GRADLE'
-          plugins { alias(libs.plugins.android.application); alias(libs.plugins.kotlin.android) }
-          android {
-              namespace = "com.example.gajananmandir"; compileSdk = 34
-              defaultConfig { applicationId = "com.example.gajananmandir"; minSdk = 24; targetSdk = 34; versionCode = 1; versionName = "1.0" }
-              buildTypes { release { isMinifyEnabled = false } }
-              compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
-              kotlinOptions { jvmTarget = "17" }
-              buildFeatures { compose = true }
-              composeOptions { kotlinCompilerExtensionVersion = "1.5.8" }
-          }
-          dependencies {
-              implementation(libs.androidx.core.ktx); implementation(libs.androidx.appcompat); implementation(libs.material)
-              implementation(libs.androidx.activity.compose); implementation(platform(libs.androidx.compose.bom))
-              implementation(libs.androidx.compose.ui); implementation(libs.androidx.compose.material3)
-              implementation("androidx.compose.foundation:foundation:1.6.8")
-              implementation("androidx.compose.material:material-icons-extended:1.6.8")
-              implementation("io.coil-kt:coil-compose:2.5.0")
-          }
-          GRADLE
-
-          python3 << 'PY'
-          import os
-          screens_dir="app/src/main/java/com/example/ui/screens"
-          if os.path.exists(screens_dir):
-              for f in os.listdir(screens_dir):
-                  if not f.endswith(".kt"): continue
-                  if f=="GlobalFixes.kt":
-                      os.remove(os.path.join(screens_dir,f))
-                      continue
-                  name=f[:-3] # HomeScreen, ParayanScreen etc
-                  path=os.path.join(screens_dir,f)
-                  # Sab screens ko simple placeholder banao
-                  with open(path,'w',encoding='utf-8') as out:
-                      out.write(f"""package com.example.ui.screens
-          import androidx.compose.foundation.layout.Box
-          import androidx.compose.foundation.layout.fillMaxSize
-          import androidx.compose.material3.Text
-          import androidx.compose.runtime.Composable
-          import androidx.compose.ui.Alignment
-          import androidx.compose.ui.Modifier
-          @Composable
-          fun {name}() {{
-              Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {{
-                  Text("{name} - Working")
-              }}
-          }}
-          """)
-                  print(f"Replaced {f} with placeholder")
-          PY
-
-      - run: echo "sdk.dir=$ANDROID_HOME" > local.properties
-      - uses: gradle/actions/setup-gradle@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.4
-      - run: gradle assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
+
+      - name: Set Android SDK
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Clean Build
+        run: gradle clean
+
+      - name: Build Debug APK
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: gajanan-mandir-apk
           path: app/build/outputs/apk/debug/*.apk

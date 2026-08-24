@@ -30,7 +30,7 @@ import com.example.data.model.BhaktiMessage
 import com.example.data.model.DailySuvichar
 import com.example.ui.components.DailySuvicharPhotoCard
 import com.example.ui.components.DevotionalTopAppBar
-import com.example.ui.util.DailyCardImageGenerator
+import com.example.ui.screens.DailyCardImageGenerator
 import java.util.Calendar
 
 @Composable

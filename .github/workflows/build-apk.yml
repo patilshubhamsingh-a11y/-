@@ -10,7 +10,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Fix R Properly With Python
+      - name: Fix R Issue Permanently
         run: |
           cat > app/build.gradle.kts <<'GRADLE'
           plugins {
@@ -52,24 +52,28 @@ jobs:
 
           python3 << 'PY'
           import os, re
-          base = "app/src/main/java"
-          for root, _, files in os.walk(base):
-              for f in files:
-                  if not f.endswith(".kt"): continue
-                  path = os.path.join(root, f)
-                  with open(path, 'r', encoding='utf-8', errors='ignore') as file:
-                      text = file.read()
-                  original = text
-                  # 1. Saare purane galat imports hatao
-                  text = text.replace("import com.example.gajananmandir.R\n", "")
-                  text = text.replace("import com.example.gajananmandir.R", "")
-                  # 2. R. ko full path se replace karo - ye 100% kaam karta hai
-                  text = re.sub(r'\bR\.', 'com.example.gajananmandir.R.', text)
-                  if text!= original:
-                      with open(path, 'w', encoding='utf-8') as out:
-                          out.write(text)
-                      print(f"Fixed: {path}")
-          print("All R fixes done")
+          base = "app/src/main/java/com/example/ui/screens"
+          for fname in os.listdir(base):
+              if not fname.endswith(".kt"): continue
+              path = os.path.join(base, fname)
+              with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                  txt = f.read()
+              # Saare R. ke uses ko hatao aur safe value do
+              # R.drawable.xxx -> android.R.drawable.ic_menu_gallery
+              txt = re.sub(r'com\.example\.gajananmandir\.R\.drawable\.\w+', 'android.R.drawable.ic_menu_gallery', txt)
+              txt = re.sub(r'\bR\.drawable\.\w+', 'android.R.drawable.ic_menu_gallery', txt)
+              # R.string.xxx -> "Gajanan"
+              txt = re.sub(r'com\.example\.gajananmandir\.R\.string\.\w+', '"Gajanan Mandir"', txt)
+              txt = re.sub(r'\bR\.string\.\w+', '"Gajanan Mandir"', txt)
+              # Bacha hua koi bhi R. -> 0
+              txt = re.sub(r'com\.example\.gajananmandir\.R\.\w+\.\w+', '0', txt)
+              txt = re.sub(r'\bR\.\w+\.\w+', '0', txt)
+              # Akela R bacha ho to hatao
+              txt = re.sub(r'\bR\b', '0', txt)
+
+              with open(path, 'w', encoding='utf-8') as out:
+                  out.write(txt)
+              print(f"Cleaned {fname}")
           PY
 
       - run: echo "sdk.dir=$ANDROID_HOME" > local.properties

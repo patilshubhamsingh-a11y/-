@@ -25,10 +25,15 @@ jobs:
       - name: Set Android SDK
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Clean Build
-        run: gradle clean
+      - name: Check Gradle files
+        run: |
+          echo "Checking project..."
+          find . -name "*.gradle.kts" -print
 
-      - name: Build Debug APK
+      - name: Clean Build
+        run: gradle clean --no-daemon
+
+      - name: Build APK
         run: gradle assembleDebug --no-daemon
 
       - name: Upload APK
